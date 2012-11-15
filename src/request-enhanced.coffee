@@ -1,5 +1,5 @@
-# includes/web.coffee
-# Functions for accessing the web
+# request-enhanced.coffee
+# A layer on top of the request library to further abstract and simplify web requests
 # Written by Joshua DeVinney
 
 # Includes
@@ -10,6 +10,7 @@ Heap = require 'heap'
 # Variables
 defaults =
   maxAttempts: 10
+  priority: 0
   timeout: 10000
   defaultValue: ''
   pool:
@@ -21,8 +22,8 @@ defaults =
 # Fetches a URL and optionally can gather data from it
 # @params
 #    options:  string of the URL to access as a string or an object containing the url and other options
-#    regex:    an optional key-value map of keys to regex to perform on the result and return under the given key each of
-#               the values will either be a RegExp object (typeof -> 'object' or 'function') or a string
+#    [regex]:  an optional key-value map of keys to regex to perform on the result and return under the given key
+#               each of the values will either be a RegExp object (typeof -> 'object' or 'function') or a string
 #               (typeof -> 'string') with a regular expression inside to specify that multiple results are desired
 #    callback: the callback to be used when complete
 # @callback
@@ -31,7 +32,6 @@ defaults =
 #    an object containing all properties as defined by regex or null if no regex
 #
 get = (options, regex, callback) ->
-  # console.log 'get',options
   defaultValue = if typeof options is 'object' and options.defaultValue? then options.defaultValue else defaults.defaultValue
   options =
     timeout: if typeof options is 'object' and options.timeout? then options.timeout else defaults.timeout
@@ -116,7 +116,7 @@ getHelper = (options, callback, attemptsLeft, lastError) ->
 #    filename:  string of the filename to write the url's content to
 #    callback:  the callback to be used when complete
 # @callback
-#    an error object or false
+#    an error object or null
 #    a string containing the filename that was written to
 #
 getFile = (options, filename, callback, attemptsLeft, lastError) ->
@@ -139,7 +139,7 @@ getFile = (options, filename, callback, attemptsLeft, lastError) ->
         if not calledBack
           calledBack = true
           if 200 <= req.response.statusCode < 300 # success!
-            callback false, filename
+            callback null, filename
           else if 500 <= req.response.statusCode < 600 # retry if temp failure
             e = new Error "HTTP #{req.response.statusCode} error fetching file #{options.url}"
             e.code = req.response.statusCode
@@ -161,7 +161,7 @@ getFile = (options, filename, callback, attemptsLeft, lastError) ->
 #    mode:      the integer permission level
 #    callback:  the callback to be used when complete
 # @callback
-#    an error object or false
+#    an error object or null
 #
 mkdirs = (path, mode, callback) ->
   tryDirectory = (dir, cb) ->
@@ -198,6 +198,10 @@ running = 0
 heap = new Heap (a, b) ->
   return a.priority - b.priority
 
+# 
+# Function popStuff
+# Starts requests when space is available in the queue
+#
 popStuff = ->
   process.nextTick ->
     if not heap.size() or running >= defaults.maxConcurrent then return
@@ -206,9 +210,25 @@ popStuff = ->
     next.function.apply null, next.arguments
     popStuff()
 
-fetch = (options, args..., callback) ->
+# 
+# Function getRequest
+# Queues a get request for processing
+# @params
+#    options:      a string of the URL to access as a string or an object containing the url and other options
+#    [filename]:   an optional string of the filename to write the url's content to that when present will stream to a file
+#    [regex]:      an optional key-value map of keys to regex to perform on the result and return under the given key
+#                   each of the values will either be a RegExp object (typeof -> 'object' or 'function') or a string
+#                   (typeof -> 'string') with a regular expression inside to specify that multiple results are desired 
+#    [priority]:   an integer priority (defaulted to the default priority) for ordering of requests with lower numbers
+#                   being of higher priority, higher priority being choosen first, and equal priority being FIFO
+#    callback:     the callback to be used when complete
+# @callback
+#    an error object or null
+#    any additional parameters will be sent by the get or getFile functions
+#
+getRequest = (options, args..., callback) ->
   filename = regex = null
-  priority = 0
+  priority = defaults.priority
   for a in args
     switch typeof a
       when 'string' then filename = a
@@ -227,4 +247,4 @@ fetch = (options, args..., callback) ->
 
 # Exports
 module.exports =
-  get: fetch
+  get: getRequest
