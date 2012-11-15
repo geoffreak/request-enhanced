@@ -17,7 +17,7 @@ In addition to the awesome features that request offers, the following bonus fea
 
 * **Easy Searching of Results** - With regex queries, searching the resulting textual data becomes extremely simple.
 
-* **Automatic Retries** - When the connection fails with one of `ESOCKETTIMEDOUT`, `ETIMEDOUT`, `ECONNRESET` or `ECONNREFUSED` or when an HTTP 5xx error occurrs, the request will automatically be re-attempted.
+* **Automatic Retries** - When the connection fails with one of `ESOCKETTIMEDOUT`, `ETIMEDOUT`, `ECONNRESET` or `ECONNREFUSED` or when an HTTP 5xx error occurrs, the request will automatically be re-attempted as these are often recoverable errors and will go away on retry.
 
 
 Installing
@@ -100,12 +100,12 @@ The newDefaults object contains a mapping of keys with their defaults. Only the 
 Here is a list of the defaults that can be overridden:
 ```javascript
 defaults = {
-  maxAttempts: 10, // The maximum number of retries before a request is deemed a failure
+  maxAttempts: 10, // The default maximum number of retries before a request is deemed a failure
   priority: 0, // The default priority a request is given if not specified
-  timeout: 10000, // The delay in milliseconds before a request is automatically aborted and retried
-  retryDelay: 5000, // The delay in milliseconds before a request is attempted again after a recoverable failure
+  timeout: 10000, // The default delay in milliseconds before a request is automatically aborted and retried
+  retryDelay: 5000, // The default delay in milliseconds before a request is attempted again after a recoverable failure
   defaultValue: '', // The default value to give a regex query if nothing is found
-  pool: { // request's pool parameter
+  pool: { // request's default pool parameter
     maxSockets: Infinity // request's max sockets is set to Infinity to allow request-enhanced to control pooling
   },
   maxConcurrent: 100 // The maximum number of concurrent requests
