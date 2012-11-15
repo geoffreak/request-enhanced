@@ -48,38 +48,8 @@ re.get('http://www.example.com', '/path/to/resulting/file', function(error, file
 ```
 
 
-Regex Queries
--------------
-Regex queries are a much simpler way to deal with searching in the returned content. When a regex query object is present in a call to the `get` function, the fetched data will be automatically parsed.
-
-### Basic Regex Query
-Here is a very simple regex query:
-```javascript
-{
-  query: {
-    regex: /My query: "(.*?)"/i
-    results: 1
-  }
-}
-```
-What this means is that the fetched data will be searched for the regex and then the first result of the match will be assigned to the `query` key of the `results` object returned. 
-
-As an example, if using the regex query above and the fetched data contained `my query: "hello world"`, the results object would look like this:
-```javascript
-{
-  query: "hello world"
-}
-```
-
-### Multiple Matches Regex Query
-By default, a regex query will return the first match, but it is possible to return the results of every match by setting the global flag `g` in the RegExp object
-
-### Remember These Quirks!
-1. The `.` character in JavaScript flavored regular expressions *doesn't* match line breaks by default. It is neccessary to set the multiline flag `m` in the RegExp object, or use `multiline: true` for a string regular expression if this functionality is desired.
-2. The index of the first match in a regex query is not 0, but 1. The entire matched string is at index 0 thanks to JavaScript's `String.match()` function.
-
-Documentation
--------------
+Function Documentation
+----------------------
 
 ### The `get` Function
 
@@ -103,7 +73,7 @@ The following options already existing in request now have default values:
 The filename is an optional string representing a location on disk where the results of the GET request should be written to. Any directories in the path not currently existing will be created automatically.
 
 #### regex
-To perform regular expression searches on the returned data, an optional regex query object can be provided. Regex queries are explained in the "Regex Queries" section above.
+To perform regular expression searches on the returned data, an optional regex query object can be provided. Regex queries are explained in the "Regex Queries" section below.
 
 #### priority
 The priority is an optional number representing the request's priority. Requests with a lesser value will be performed prior to those with a higher valued priority. Requests with the same priority will be performed in a [FIFO order](http://en.wikipedia.org/wiki/FIFO). If not specified, a request is given the default priority of `0`.
@@ -113,3 +83,115 @@ The callback function will be called on success or error due to unrecoverable er
 * `error` - This will either be an error object if there was an error, or `null` if there was not. The error object may have a `code` paramter for an HTTP status code if the error was HTTP related.
 * `data` - If a filename was specified in the call, a string filename will be returned of the newly saved file on disk. If a filename was not specified in the call, the string data returned from the GET request will be returned.
 * `results` - If regex queries were specified in the call and a filename was not, the results of the queries running on the `data` will be returned in this object
+
+Regex Queries
+-------------
+Regex queries are a much simpler way to deal with searching in the returned content. When a regex query object is present in a call to the `get` function, the fetched data will be automatically parsed.
+
+### Basic Regex Query
+Here is a very simple regex query:
+```javascript
+{
+  query: {
+    regex: /My query: "(.*?)"/i,
+    results: 1
+  }
+}
+```
+What this means is that the fetched data will be searched for the regex and then the first result of the match will be assigned to the `query` key of the `results` object returned. 
+
+As an example, if using the regex query above and the fetched data contained `my query: "hello world"`, the results object would look like this:
+```javascript
+{
+  query: "hello world"
+}
+```
+
+### String Regular Expressions
+Instead of supplying a native RegExp object, it is also possible to supply a string as the regex.
+```javascript
+{
+  query: {
+    regex: 'My query: "(.*?)"',
+    results: 1
+  }
+}
+```
+By default, only the case insensitive flag `i` will be set automatically, but it is possible to set or disable any of the three flags.
+```javascript
+{
+  query: {
+    regex: 'My query: "(.*?)"',
+    results: 1,
+    caseSensitive: true, // disables the i flag
+    multiple: true,      // enables the g flag
+    multiline: true      // enables the m flag
+  }
+}
+```
+The values of these parameters need not be the boolean `true`, but anything that equates to true.
+
+### Multiple Matches
+By default, a regex query will return only the first match, but it is possible to return the results of every match by setting the global flag `g` in the RegExp object or by using the `multiple: true` setting. Instead of returning the value of the result directly as the value of the key as in the basic example, the value will be an array of matches.
+
+Take for example, the following regex query:
+```javascript
+{
+  query: {
+    regex: /My query: "(.*?)"/gi,
+    results: 1
+  }
+}
+```
+If the fetched data contained both `my query: "hello world"` and `my query: "goodbye world"`, the results object would look like this:
+```javascript
+{
+  query: ["hello world", "goodbye world"]
+}
+```
+*Note: An array will always be returned for multiple matches queries. Simply use `array.length` to determine the number of matches found.*
+
+### Multiple Results
+It is also possible to return multiple results from a single query. Simply supply a mapping of result indexes to keys to store the resulting data on in place of the numerical index from the above examples. The results object will assign the matches to the keys and return the new mapping as the result.
+
+This query will return multiple results:
+```javascript
+{
+  query: {
+    regex: /My query: "(.*?)", ~(.*?)~/i,
+    results: {
+      1: 'myquery',
+      2: 'tilde'
+    }
+  }
+}
+```
+If the fetched data contained `my query: "hello world", ~hello!~`, the results object would look like this:
+```javascript
+{
+  query: {
+    myquery: 'hello world',
+    tilde: 'hello!'
+  }
+}
+```
+Multiple results can be returned from multiple matches as well. By tweaking the example query above to add a global flag `g` and also finding `my query: "goodbye world", ~goodbye!~` in the fetched data, the results object would be changed to this:
+```javascript
+{
+  query: [
+    {
+      myquery: 'hello world',
+      tilde: 'hello!'
+    }, 
+    {
+      myquery: 'goodbye world',
+      tilde: 'goodbye!'
+    }
+  ]
+}
+```
+
+### Tips and Tricks
+1. **Important to note!** The `.` character in JavaScript flavored regular expressions *doesn't* match line breaks by default. It is neccessary to set the multiline flag `m` in the RegExp object, or use `multiline: true` for a string regular expression if this functionality is desired.
+2. The index of the first match in a regex query is not 0, but 1. The entire matched string is at index 0 thanks to JavaScript's `String.match()` function. Requesting an index of 0 will return the entire matched string (e.g. `my query: "hello world"`).
+3. When unsure about the indexes of the results of the regex query, simply remove the `results:` declaration (or set to null). The `String.match()` results as described in #2 will all be returned in an array. An empty array will be returned in cases where nothing is found.
