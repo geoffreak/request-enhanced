@@ -12,10 +12,21 @@ defaults =
   maxAttempts: 10
   priority: 0
   timeout: 10000
+  retryDelay: 5000
   defaultValue: ''
   pool:
     maxSockets: Infinity
   maxConcurrent: 100
+
+# 
+# Function setDefaults 
+# Sets the defaults for request-enhanced
+# @params
+#    newDefaults:  an object containing the parameters desired to override
+#
+setDefaults = (newDefaults) ->
+  for d of newDefaults
+    defaults[d] = newDefaults[d]
 
 # 
 # Function get 
@@ -33,11 +44,11 @@ defaults =
 #
 get = (options, regex, callback) ->
   defaultValue = if typeof options is 'object' and options.defaultValue? then options.defaultValue else defaults.defaultValue
-  options =
-    timeout: if typeof options is 'object' and options.timeout? then options.timeout else defaults.timeout
-    maxAttempts: if typeof options is 'object' and options.maxAttempts? then options.maxAttempts else defaults.maxAttempts
-    pool: if typeof options is 'object' and options.pool? then options.pool else defaults.pool
-    url: if typeof options is 'string' then options else options.url
+  if typeof options is 'string' then options = url: options
+  unless options.timeout?     then options.timeout      = defaults.timeout
+  unless options.maxAttempts? then options.maxAttempts  = defaults.maxAttempts
+  unless options.pool?        then options.pool         = defaults.pool
+  unless options.retryDelay?  then options.retryDelay   = defaults.retryDelay
   if not callback and typeof regex is 'function'
     callback = regex
     regex = null
@@ -96,7 +107,7 @@ getHelper = (options, callback, attemptsLeft, lastError) ->
     if (error && (error.code in ['ESOCKETTIMEDOUT', 'ETIMEDOUT', 'ECONNRESET', 'ECONNREFUSED'])) || (response && 500 <= response.statusCode < 600)
       e = if error then new Error("#{error.code} error on #{options.url}") else new Error("HTTP #{response.statusCode} error fetching #{options.url}")
       e.code = if error then error.code else response.statusCode
-      setTimeout (-> getHelper options, callback, --attemptsLeft, e), options.timeout
+      setTimeout (-> getHelper options, callback, --attemptsLeft, e), options.retryDelay
     else if not error && 200 <= response.statusCode < 300
       callback null, body
     else if error
@@ -120,11 +131,11 @@ getHelper = (options, callback, attemptsLeft, lastError) ->
 #    a string containing the filename that was written to
 #
 getFile = (options, filename, callback, attemptsLeft, lastError) ->
-  options =
-    timeout: if typeof options is 'object' and options.timeout? then options.timeout else defaults.timeout
-    maxAttempts: if typeof options is 'object' and options.maxAttempts? then options.maxAttempts else defaults.maxAttempts
-    pool: if typeof options is 'object' and options.pool? then options.pool else defaults.pool
-    url: if typeof options is 'string' then options else options.url
+  if typeof options is 'string' then options = url: options
+  unless options.timeout?     then options.timeout      = defaults.timeout
+  unless options.maxAttempts? then options.maxAttempts  = defaults.maxAttempts
+  unless options.pool?        then options.pool         = defaults.pool
+  unless options.retryDelay?  then options.retryDelay   = defaults.retryDelay
   attemptsLeft = options.maxAttempts if not attemptsLeft?
   if attemptsLeft <= 0 then return callback lastError
   path = filename.substr 0, filename.lastIndexOf '/'
@@ -143,7 +154,7 @@ getFile = (options, filename, callback, attemptsLeft, lastError) ->
           else if 500 <= req.response.statusCode < 600 # retry if temp failure
             e = new Error "HTTP #{req.response.statusCode} error fetching file #{options.url}"
             e.code = req.response.statusCode
-            setTimeout (-> getFile options, filename, callback, --attemptsLeft, e), options.timeout
+            setTimeout (-> getFile options, filename, callback, --attemptsLeft, e), options.retryDelay
           else
             callback new Error "HTTP #{req.response.statusCode} error fetching file #{options.url}"
       req.on "error", (error) -> # error event only fires when socket issues
@@ -151,7 +162,7 @@ getFile = (options, filename, callback, attemptsLeft, lastError) ->
           calledBack = true
           e = new Error("#{error.code} error fetching file #{options.url}")
           e.code = error.code
-          setTimeout (-> getFile options, filename, callback, --attemptsLeft, e), options.timeout
+          setTimeout (-> getFile options, filename, callback, --attemptsLeft, e), options.retryDelay
 
 # 
 # Function mkdirs
@@ -248,3 +259,4 @@ getRequest = (options, args..., callback) ->
 # Exports
 module.exports =
   get: getRequest
+  setDefaults: setDefaults
