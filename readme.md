@@ -4,6 +4,20 @@ Request Enhanced
 Request Enhanced is a Node.js library that functions as a layer on top of the [request](https://github.com/mikeal/request) library to further abstract and simplify web requests. No worries about handling simple errors or retries, pooling requests, dealing with the complexity of writing to a file, or even manually searching the fetched content. Just fetch and done.
 
 
+New Features
+------------
+
+In addition to the awesome features that request offers, the following bonus features are available with request-enhanced
+
+* **Greater File Saving Simplicity** - No more worrying about odd edge cases or strange syntax when downloading to files. Directories are also automatically created along the specified file path as necessary.
+
+* **Request Pooling** - All requests are pooled to prevent EMFILE errors from too many simultaneous requests.
+
+* **Request Prioritizing** - Requests can be given a priority so that higher priority requests can execute first. 
+
+* **Easy Regex Searching of Results** - With regex queries, searching the resulting textual data becomes extremely simple.
+
+
 Installing
 ----------
 
@@ -15,7 +29,7 @@ npm install request-enhanced
 Basic Usage
 -----------
 
-To perform a simple GET request, you can use the following code:
+To perform a simple GET request, the following code can be used:
 
 ```javascript
 var re = require('request-enhanced');
@@ -25,7 +39,7 @@ re.get('http://www.example.com', function(error, data){
 ```
 
 
-What if you don't want the result in memory and would rather pipe it to a file? No problem!
+Don't want the result in memory and would rather pipe it to a file? No problem!
 
 ```javascript
 re.get('http://www.example.com', '/path/to/resulting/file', function(error, filename){
@@ -34,26 +48,11 @@ re.get('http://www.example.com', '/path/to/resulting/file', function(error, file
 ```
 
 
-New Features
-------------
-
-In addition to the awesome features that request offers, you get the following bonus features with request-enhanced
-
-* **Greater File Saving Simplicity** - No more worrying about odd edge cases or strange syntax when downloading to files. Directories are also automatically created along the specified file path as necessary.
-
-* **Request Pooling** - All requests are pooled to prevent EMFILE errors from too many simultaneous requests.
-
-* **Request Prioritizing** - Requests can be given a priority so that higher priority requests can execute first. 
-
-* **Easy Regex Searching of Results** - With regex queries, searching the resulting textual data becomes extremely simple.
-
-
-
 Regex Queries
 -------------
 Regex queries are a much simpler way to deal with searching in the returned content. When a regex query object is present in a call to the `get` function, the fetched data will be automatically parsed.
 
-#### Basic Regex Query
+### Basic Regex Query
 Here is a very simple regex query:
 ```javascript
 {
@@ -63,9 +62,21 @@ Here is a very simple regex query:
   }
 }
 ```
-What this means is that the fetched data will be searched for the regex
+What this means is that the fetched data will be searched for the regex and then the first result of the match will be assigned to the `query` key of the `results` object returned. 
 
-**Remember!** The `.` character in JavaScript flavored regular expressions *doesn't* match line breaks by default. You will need to set the multiline flag `m` in your RegExp object, or use `multiline: true` for a string regular expression
+As an example, if using the regex query above and the fetched data contained `my query: "hello world"`, the results object would look like this:
+```javascript
+{
+  query: "hello world"
+}
+```
+
+### Multiple Matches Regex Query
+By default, a regex query will return the first match, but it is possible to return the results of every match by setting the global flag `g` in the RegExp object
+
+### Remember These Quirks!
+1. The `.` character in JavaScript flavored regular expressions *doesn't* match line breaks by default. It is neccessary to set the multiline flag `m` in the RegExp object, or use `multiline: true` for a string regular expression if this functionality is desired.
+2. The index of the first match in a regex query is not 0, but 1. The entire matched string is at index 0 thanks to JavaScript's `String.match()` function.
 
 Documentation
 -------------
@@ -79,7 +90,7 @@ get ( options, [filename or regex], [priority], callback )
 ```
 
 #### options
-The options parameter behavior is nearly identical to request's options paramter. You can pass a string URL of the target or any of [request's parameters](https://github.com/mikeal/request#requestoptions-callback) in an options object with the following additional options:
+The options parameter behavior is nearly identical to request's options paramter. It is possible to pass a string URL of the target or any of [request's parameters](https://github.com/mikeal/request#requestoptions-callback) in an options object with the following additional options:
 * `maxAttempts` - The maximum number of attempts to retry the request, defaults to `10`
 * `retryDelay` - The delay in milliseconds before trying again after a recoverable failure, defaults to `5000`
 * `defaultValue` - The default value to assign to regex queries that find no data, defaults to `''`
