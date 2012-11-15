@@ -34,23 +34,27 @@ re.get('http://www.example.com', '/path/to/resulting/file', function(error, file
 ```
 
 
-Features
---------
-
-### Pooling
-All requests are pooled to prevent EMFILE errors from too many simultaneous requests. By default, only 100 requests will be performed at once.
-
-### Prioritizing
-Requests can be given a priority so that higher priority requests can execute first. To prioritize a request, simply supply 
-
-
-Advanced Use
+New Features
 ------------
+
+In addition to the awesome features that request offers, you get the following bonus features with request-enhanced
+
+* **Greater File Saving Simplicity** - No more worrying about odd edge cases or strange syntax when downloading to files.
+
+* **Request Pooling** - All requests are pooled to prevent EMFILE errors from too many simultaneous requests.
+
+* **Request Prioritizing** - Requests can be given a priority so that higher priority requests can execute first. 
+
+* **Easy Regex Searching of Results** - With regex queries, searching the resulting textual data becomes extremely simple.
+
+
 
 Regex Queries
 -------------
-Regex queries are a much simpler way to deal with searching in the returned content. When a regex query object is present, the result data will be automatically parsed
+Regex queries are a much simpler way to deal with searching in the returned content. When a regex query object is present, the fetched data will be automatically parsed.
 
+#### Basic Regex Query
+Here is a very simple regex query:
 ```javascript
 {
   query: {
@@ -59,11 +63,14 @@ Regex queries are a much simpler way to deal with searching in the returned cont
   }
 }
 ```
+What this means is that the fetched data will be searched for the regex
+
+**Remember!** The `.` character in JavaScript flavored regular expression *doesn't* match line breaks by default. You will need to set the multiline flag `m` in your RegExp object, or use `multiline: true` for a string regular expression
 
 Documentation
 -------------
 
-### `get` Function
+### The `get` Function
 
 The `get` function actually has a bunch of optional parameters to achieve additional functionality. A detailed description of each of the parameters is below.
 
