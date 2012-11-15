@@ -65,7 +65,7 @@ get = (options, regex, callback) ->
       if not regexp.global 
         if not search.results?
           delete result.input if result?
-          results[key] = result or defaultValue
+          results[key] = result or []
         else if typeof search.results is 'number'
           results[key] = if result? and result[search.results] then result[search.results] else defaultValue
         else if typeof search.results is 'object'
@@ -80,7 +80,7 @@ get = (options, regex, callback) ->
           inner = r.match regexp
           if not search.results?
             delete inner.input if inner?
-            results[key][i] = inner or defaultValue
+            results[key][i] = inner or []
           else if typeof search.results is 'number'
             results[key][i] = if inner? and inner[search.results] then inner[search.results] else defaultValue
           else if typeof search.results is 'object'
