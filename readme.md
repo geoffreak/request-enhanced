@@ -1,7 +1,7 @@
 Request Enhanced
 ================
 
-Request Enhanced is a layer on top of the request library to further abstract and simplify web requests. No worries about handling simple errors or retries, pooling requests, dealing with the complexity of writing to a file, or even manually searching the fetched content. Just fetch and done.
+Request Enhanced is a Node.js library that functions as a layer on top of the [request](https://github.com/mikeal/request) library to further abstract and simplify web requests. No worries about handling simple errors or retries, pooling requests, dealing with the complexity of writing to a file, or even manually searching the fetched content. Just fetch and done.
 
 
 Installing
@@ -39,7 +39,7 @@ New Features
 
 In addition to the awesome features that request offers, you get the following bonus features with request-enhanced
 
-* **Greater File Saving Simplicity** - No more worrying about odd edge cases or strange syntax when downloading to files.
+* **Greater File Saving Simplicity** - No more worrying about odd edge cases or strange syntax when downloading to files. Directories are also automatically created along the specified file path as necessary.
 
 * **Request Pooling** - All requests are pooled to prevent EMFILE errors from too many simultaneous requests.
 
@@ -51,7 +51,7 @@ In addition to the awesome features that request offers, you get the following b
 
 Regex Queries
 -------------
-Regex queries are a much simpler way to deal with searching in the returned content. When a regex query object is present, the fetched data will be automatically parsed.
+Regex queries are a much simpler way to deal with searching in the returned content. When a regex query object is present in a call to the `get` function, the fetched data will be automatically parsed.
 
 #### Basic Regex Query
 Here is a very simple regex query:
@@ -65,7 +65,7 @@ Here is a very simple regex query:
 ```
 What this means is that the fetched data will be searched for the regex
 
-**Remember!** The `.` character in JavaScript flavored regular expression *doesn't* match line breaks by default. You will need to set the multiline flag `m` in your RegExp object, or use `multiline: true` for a string regular expression
+**Remember!** The `.` character in JavaScript flavored regular expressions *doesn't* match line breaks by default. You will need to set the multiline flag `m` in your RegExp object, or use `multiline: true` for a string regular expression
 
 Documentation
 -------------
