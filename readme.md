@@ -15,7 +15,9 @@ In addition to the awesome features that request offers, the following bonus fea
 
 * **Request Prioritizing** - Requests can be given a priority so that higher priority requests can execute first. 
 
-* **Easy Regex Searching of Results** - With regex queries, searching the resulting textual data becomes extremely simple.
+* **Easy Searching of Results** - With regex queries, searching the resulting textual data becomes extremely simple.
+
+* **Automatic Retries** - When the connection fails with one of `ESOCKETTIMEDOUT`, `ETIMEDOUT`, `ECONNRESET` or `ECONNREFUSED` or when an HTTP 5xx error occurrs, the request will automatically be re-attempted.
 
 
 Installing
@@ -59,7 +61,7 @@ The `get` function actually has a bunch of optional parameters to achieve additi
 get ( options, [filename or regex], [priority], callback )
 ```
 
-#### options
+#### `options`
 The options parameter behavior is nearly identical to request's options paramter. It is possible to pass a string URL of the target or any of [request's parameters](https://github.com/mikeal/request#requestoptions-callback) in an options object with the following additional options:
 * `maxAttempts` - The maximum number of attempts to retry the request, defaults to `10`
 * `retryDelay` - The delay in milliseconds before trying again after a recoverable failure, defaults to `5000`
@@ -69,20 +71,46 @@ The following options already existing in request now have default values:
 * `timeout` - Now defaults to `10000`
 * `pool` - Now defaults to `{maxSockets: Infinity}`
 
-#### filename
-The filename is an optional string representing a location on disk where the results of the GET request should be written to. Any directories in the path not currently existing will be created automatically.
+#### `filename`
+The filename is an optional string representing a location on disk where the results of the GET request should be written to. Any directories in the path not currently existing will be created automatically. *This option cannot be used at the same time as `regex`.*
 
-#### regex
-To perform regular expression searches on the returned data, an optional regex query object can be provided. Regex queries are explained in the "Regex Queries" section below.
+#### `regex`
+To perform regular expression searches on the returned data, an optional regex query object can be provided. Regex queries are explained in the "Regex Queries" section below. *This option cannot be used at the same time as `filename`.*
 
-#### priority
+#### `priority`
 The priority is an optional number representing the request's priority. Requests with a lesser value will be performed prior to those with a higher valued priority. Requests with the same priority will be performed in a [FIFO order](http://en.wikipedia.org/wiki/FIFO). If not specified, a request is given the default priority of `0`.
 
-#### callback
+#### `callback`
 The callback function will be called on success or error due to unrecoverable error or reaching the maximum retries. The following parameters will be passed back to this function in the following order:
 * `error` - This will either be an error object if there was an error, or `null` if there was not. The error object may have a `code` paramter for an HTTP status code if the error was HTTP related.
 * `data` - If a filename was specified in the call, a string filename will be returned of the newly saved file on disk. If a filename was not specified in the call, the string data returned from the GET request will be returned.
 * `results` - If regex queries were specified in the call and a filename was not, the results of the queries running on the `data` will be returned in this object
+
+
+### The `setDefaults` Function
+The `setDefaults` function allows for setting of the default values across all requests. A detailed description of each of the parameter it takes is below.
+
+```
+setDefaults ( newDefaults ) 
+```
+
+#### `newDefaults`
+The newDefaults object contains a mapping of keys with their defaults. Only the defaults that are specified will be overridden. All others will remain as they were previously and any additional non-existant defaults specified will be ignored. 
+
+Here is a list of the defaults that can be overridden:
+```javascript
+defaults = {
+  maxAttempts: 10, // The maximum number of retries before a request is deemed a failure
+  priority: 0, // The default priority a request is given if not specified
+  timeout: 10000, // The delay in milliseconds before a request is automatically aborted and retried
+  retryDelay: 5000, // The delay in milliseconds before a request is attempted again after a recoverable failure
+  defaultValue: '', // The default value to give a regex query if nothing is found
+  pool: { // request's pool parameter
+    maxSockets: Infinity // request's max sockets is set to Infinity to allow request-enhanced to control pooling
+  },
+  maxConcurrent: 100 // The maximum number of concurrent requests
+};
+```
 
 Regex Queries
 -------------
@@ -188,6 +216,25 @@ Multiple results can be returned from multiple matches as well. By tweaking the 
       tilde: 'goodbye!'
     }
   ]
+}
+```
+### Multiple Queries
+Finally, it is also possible to do as many queries as desired on the fetched data. Simply supply more keys mapping to regex queries.
+
+Use this type of query:
+```javascript
+{
+  queryOne: { ... },
+  queryTwo: { ... },
+  queryThree: { ... },
+}
+```
+to produce this type of results object:
+```javascript
+{
+  queryOne: ... ,
+  queryTwo: ... ,
+  queryThree: ... ,
 }
 ```
 
