@@ -98,6 +98,7 @@ setDefaults ( newDefaults )
 The newDefaults object contains a mapping of keys with their defaults. Only the defaults that are specified will be overridden. All others will remain as they were previously and any additional non-existant defaults specified will be ignored. 
 
 Here is a list of the defaults that can be overridden:
+
 ```javascript
 defaults = {
   maxAttempts: 10, // The default maximum number of retries before a request is deemed a failure
@@ -118,6 +119,7 @@ Regex queries are a much simpler way to deal with searching in the returned cont
 
 ### Basic Regex Query
 Here is a very simple regex query:
+
 ```javascript
 {
   query: {
@@ -126,9 +128,11 @@ Here is a very simple regex query:
   }
 }
 ```
+
 What this means is that the fetched data will be searched for the regex and then the first result of the match will be assigned to the `query` key of the `results` object returned. 
 
 As an example, if using the regex query above and the fetched data contained `my query: "hello world"`, the results object would look like this:
+
 ```javascript
 {
   query: "hello world"
@@ -137,6 +141,7 @@ As an example, if using the regex query above and the fetched data contained `my
 
 ### String Regular Expressions
 Instead of supplying a native RegExp object, it is also possible to supply a string as the regex.
+
 ```javascript
 {
   query: {
@@ -145,7 +150,9 @@ Instead of supplying a native RegExp object, it is also possible to supply a str
   }
 }
 ```
+
 By default, only the case insensitive flag `i` will be set automatically, but it is possible to set or disable any of the three flags.
+
 ```javascript
 {
   query: {
@@ -157,12 +164,14 @@ By default, only the case insensitive flag `i` will be set automatically, but it
   }
 }
 ```
+
 The values of these parameters need not be the boolean `true`, but anything that equates to true.
 
 ### Multiple Matches
 By default, a regex query will return only the first match, but it is possible to return the results of every match by setting the global flag `g` in the RegExp object or by using the `multiple: true` setting. Instead of returning the value of the result directly as the value of the key as in the basic example, the value will be an array of matches.
 
 Take for example, the following regex query:
+
 ```javascript
 {
   query: {
@@ -171,18 +180,22 @@ Take for example, the following regex query:
   }
 }
 ```
+
 If the fetched data contained both `my query: "hello world"` and `my query: "goodbye world"`, the results object would look like this:
+
 ```javascript
 {
   query: ["hello world", "goodbye world"]
 }
 ```
+
 *Note: An array will always be returned for multiple matches queries. Simply use `array.length` to determine the number of matches found.*
 
 ### Multiple Results
 It is also possible to return multiple results from a single query. Simply supply a mapping of result indexes to keys to store the resulting data on in place of the numerical index from the above examples. The results object will assign the matches to the keys and return the new mapping as the result.
 
 This query will return multiple results:
+
 ```javascript
 {
   query: {
@@ -194,7 +207,9 @@ This query will return multiple results:
   }
 }
 ```
+
 If the fetched data contained `my query: "hello world", ~hello!~`, the results object would look like this:
+
 ```javascript
 {
   query: {
@@ -203,7 +218,9 @@ If the fetched data contained `my query: "hello world", ~hello!~`, the results o
   }
 }
 ```
+
 Multiple results can be returned from multiple matches as well. By tweaking the example query above to add a global flag `g` and also finding `my query: "goodbye world", ~goodbye!~` in the fetched data, the results object would be changed to this:
+
 ```javascript
 {
   query: [
@@ -218,10 +235,12 @@ Multiple results can be returned from multiple matches as well. By tweaking the 
   ]
 }
 ```
+
 ### Multiple Queries
 Finally, it is also possible to do as many queries as desired on the fetched data. Simply supply more keys mapping to regex queries.
 
 Use this type of query:
+
 ```javascript
 {
   queryOne: { ... },
@@ -229,7 +248,9 @@ Use this type of query:
   queryThree: { ... },
 }
 ```
+
 to produce this type of results object:
+
 ```javascript
 {
   queryOne: ... ,
