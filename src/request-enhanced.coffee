@@ -102,7 +102,7 @@ get = (options, regex, callback) ->
 #
 getHelper = (options, callback, attemptsLeft, lastError) ->
   attemptsLeft = options.maxAttempts if not attemptsLeft?
-  if attemptsLeft <= 0 then return callback (lastError if lastError? else new Error 'No attempts to fetch the URL were made')
+  if attemptsLeft <= 0 then return callback (if lastError? then lastError else new Error 'No attempts to fetch the URL were made')
   request options, (error, response, body) ->
     if (error && (error.code in ['ESOCKETTIMEDOUT', 'ETIMEDOUT', 'ECONNRESET', 'ECONNREFUSED'])) || (response && 500 <= response.statusCode < 600)
       e = if error then new Error("#{error.code} error on #{options.url}") else new Error("HTTP #{response.statusCode} error fetching #{options.url}")

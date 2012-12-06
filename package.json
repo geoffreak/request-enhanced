@@ -1,6 +1,6 @@
 {
   "name": "request-enhanced",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "author": "Joshua DeVinney <admin@geoffreak.com>",
   "description": "A layer on top of the request library to further abstract and simplify web requests",
   "main": "./lib/request-enhanced",
